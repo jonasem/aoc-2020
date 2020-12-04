@@ -9,18 +9,25 @@ namespace aoc_2020
         static void Main(string[] args)
         {
             var lines = File.ReadAllLines(@"input/day1");
-            var numbers = lines
-                .Select(line => Convert.ToInt32(line))
-                .OrderBy(number => number);
+            var numbers = lines.Select(line => Convert.ToInt32(line)).OrderBy(number => number);
 
-            var match = numbers.First(number => numbers
-                .Where(pairedNumber => pairedNumber <= 2020 - number)
-                .Any(pairedNumber => number == 2020 - pairedNumber));
+            var match = numbers.First(number => HasMatch(numbers, 2020 - number));
+            var secondMatch = FindMatch(numbers, 2020 - match);
+            var thirdMatch = 2020 - match - secondMatch;
 
-            var pairedNumber = 2020 - match;
-
-            Console.WriteLine($"{match} og {pairedNumber}, produkt = {match * pairedNumber} ");
-
+            Console.WriteLine($"{match} og {secondMatch} og {thirdMatch}, produkt = {match * secondMatch * thirdMatch} ");
         }
+
+
+        static bool HasMatch(IOrderedEnumerable<int> numbers, int target) {
+            return numbers.Any(number => numbers
+                .Any(pairedNumber => number + pairedNumber == target));
+        }
+
+        static int FindMatch(IOrderedEnumerable<int> numbers, int target) {
+            return numbers.FirstOrDefault(number => numbers
+                .Any(pairedNumber => number + pairedNumber == target));
+        }
+
     }
 }

@@ -2,24 +2,31 @@
 using System.IO;
 using System.Linq;
 
+var passportLines = File.ReadAllLines("input/day4");
 
-var patternLines = File.ReadAllLines("input/day3");
+var passports = passportLines.Aggregate(new string[] { "" }, (passports, line) => {
+    
+    if(line.Length == 0) { passports = passports.Append("").ToArray(); }
+    passports[passports.Length - 1] = passports[passports.Length - 1] + " " + line;
+    return passports;
+});
 
-var slopes = new [] {(1, 1), (1, 3), (1, 5), (1, 7), (2, 1)};
-var total = slopes.Aggregate(1L, (product, slope) => product * slopeHits(patternLines, slope.Item1, slope.Item2));
+var requiredFields = new [] {
+    "byr",
+    "iyr",
+    "eyr",
+    "hgt",
+    "hcl",
+    "ecl",
+    "pid",
+    //  "cid",
+};
+
+var total = passports.Aggregate(0, (sum, passport) => {
+    var parts = passport.Split(' ');
+    var meetsRequirements = requiredFields.All(field => parts.Any(part => part.StartsWith(field)));
+    return sum + (meetsRequirements ? 1 : 0);
+});
 
 Console.WriteLine(total);
 
-static int slopeHits(string[] patternLines, int verticalIncrement, int horizontalIncrement) {
-    var horizontalPosition = 0;
-    var patternWidth = patternLines.First().Length;
-
-    return patternLines
-        .Skip(verticalIncrement)
-        .Where((_, index) => index % verticalIncrement == 0)
-        .Aggregate(0, (sum, line) => {
-            horizontalPosition += horizontalIncrement;
-            var hit = line[horizontalPosition % patternWidth] == '#';
-            return (hit ? 1 : 0) + sum;
-        });
-}

@@ -1,57 +1,36 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
-var passportLines = File.ReadAllLines("input/day4");
+var placementStrings = File.ReadAllLines("input/day5");
+var placements = placementStrings.Select(placement => new Placement(placement[..7], placement[7..]));
 
-var passports = passportLines.Aggregate(new string[] { "" }, (passports, line) => {
-    if(line.Length == 0) { passports = passports.Append("").ToArray(); }
-    passports[passports.Length - 1] = passports[passports.Length - 1] + " " + line;
-    return passports;
-});
+Console.WriteLine(placements.Max(placement => placement.SeatId));
 
-(int x, Func<string, bool> y) = (1, (string d) => false);
+Console.WriteLine(new Placement("BFFFBBF", "RRR").ToString()); //: row 70, column 7, seat ID 567.
+Console.WriteLine(new Placement("FFFBBBF", "RRR").ToString()); //: row 14, column 7, seat ID 119.
+Console.WriteLine(new Placement("BBFFBBF", "RLL").ToString()); //: row 102, column 4, seat ID 820.
 
-var requiredFields = new (string policy, Func<string, bool> validate)[] {
-    ("byr", password => isNumberBetween(password, 1920, 2002)),
-    ("iyr", password => isNumberBetween(password, 2010, 2020)),
-    ("eyr", password => isNumberBetween(password, 2020, 2030)),
-    ("hgt", password => isHeightBetween(password)),
-    ("hcl", password => matchesRegex(password, @"^#[a-f0-9]{6}$")),
-    ("ecl", password => (new string[] {"amb", "blu", "brn", "gry", "grn", "hzl", "oth"}).Any(a => a == password)),
-    ("pid", password => matchesRegex(password, @"^\d{9}$")),
-    //  "cid",
-};
+record Placement(string depth, string width) {
+    public int Row { get { 
+        return depth.Aggregate((min: 0, max: 127), (range, letter) => (
+            min: range.min + (letter == 'B' ? (range.max + 1 - range.min)/ 2 : 0), 
+            max: range.max - (letter == 'F' ? (range.max + 1 - range.min)/ 2 : 0)
+        )).min;
+    } }
 
+    public int Column { get { 
+        return width.Aggregate((min: 0, max: 7), (range, letter) => (
+            min: range.min + (letter == 'R' ? (range.max + 1 - range.min)/ 2 : 0), 
+            max: range.max - (letter == 'L' ? (range.max + 1 - range.min)/ 2 : 0)
+        )).min;
+    } }
 
-var total = passports.Aggregate(0, (sum, passport) => {
-    var parts = passport.Split(' ');
-    var meetsRequirements = requiredFields.All(field => parts.Any(part => part.StartsWith(field.policy) && field.validate(part.Substring(4))));
-    return sum + (meetsRequirements ? 1 : 0);
-});
+    public int SeatId { get { return Row * 8  + Column; }}
 
-Console.WriteLine(total);
-
-bool isNumberBetween(string number, int min, int max) {
-    if(int.TryParse(number, out var num)) {
-        return number.Length == 4 && num >= min && num <= max;
+    public override string ToString()
+    {
+        return $"r: {Row} c: {Column} s: {SeatId}";
     }
-    return false;
-}
 
-bool isHeightBetween(string number) {
-    var type = number[^2..];
-    
-    if(int.TryParse(number[..^2], out var num)) {
-        if (type == "cm") 
-            return num >= 150 && num <= 193;
-        return num >= 59 && num <= 76;
-    }
-    return false;
-}
-
-bool matchesRegex(string text, string pattern) {
-    var rx = new Regex(pattern);
-    return rx.IsMatch(text);
 }

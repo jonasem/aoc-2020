@@ -5,11 +5,16 @@ using System.Linq;
 var placementStrings = File.ReadAllLines("input/day5");
 var placements = placementStrings.Select(placement => new Placement(placement[..7], placement[7..]));
 
-Console.WriteLine(placements.Max(placement => placement.SeatId));
-
-Console.WriteLine(new Placement("BFFFBBF", "RRR").ToString()); //: row 70, column 7, seat ID 567.
-Console.WriteLine(new Placement("FFFBBBF", "RRR").ToString()); //: row 14, column 7, seat ID 119.
-Console.WriteLine(new Placement("BBFFBBF", "RLL").ToString()); //: row 102, column 4, seat ID 820.
+var ordered = placements.OrderBy(placement => placement.SeatId);
+var candidate = placements.First();
+foreach (var item in ordered)
+{
+    if (item.SeatId == candidate.SeatId + 2) { 
+        Console.WriteLine(item.SeatId - 1);
+        break;
+    }
+    candidate = item;
+}
 
 record Placement(string depth, string width) {
     public int Row { get { 

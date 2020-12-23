@@ -1,41 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-var placementStrings = File.ReadAllLines("input/day5");
-var placements = placementStrings.Select(placement => new Placement(placement[..7], placement[7..]));
+var answerLines = File.ReadAllLines("input/day6");
 
-var ordered = placements.OrderBy(placement => placement.SeatId);
-var candidate = placements.First();
-foreach (var item in ordered)
-{
-    if (item.SeatId == candidate.SeatId + 2) { 
-        Console.WriteLine(item.SeatId - 1);
-        break;
-    }
-    candidate = item;
-}
+var groupAnswers = answerLines.Aggregate(new string[] { "" }, (answers, line) => {
+    if(line.Length == 0) { answers = answers.Append("").ToArray(); }
+    answers[answers.Length - 1] = answers[answers.Length - 1] + " " + line;
+    return answers;
+});
 
-record Placement(string depth, string width) {
-    public int Row { get { 
-        return depth.Aggregate((min: 0, max: 127), (range, letter) => (
-            min: range.min + (letter == 'B' ? (range.max + 1 - range.min)/ 2 : 0), 
-            max: range.max - (letter == 'F' ? (range.max + 1 - range.min)/ 2 : 0)
-        )).min;
-    } }
 
-    public int Column { get { 
-        return width.Aggregate((min: 0, max: 7), (range, letter) => (
-            min: range.min + (letter == 'R' ? (range.max + 1 - range.min)/ 2 : 0), 
-            max: range.max - (letter == 'L' ? (range.max + 1 - range.min)/ 2 : 0)
-        )).min;
-    } }
+// part 1
+var sum = groupAnswers.Select(answers => answers.Replace(" ", "").Distinct().Count())
+    .Sum();
 
-    public int SeatId { get { return Row * 8  + Column; }}
+Console.WriteLine(sum);
 
-    public override string ToString()
-    {
-        return $"r: {Row} c: {Column} s: {SeatId}";
-    }
 
-}
+// part 2
+var intersectionSum = groupAnswers.Select(answers => answers
+    .Trim()
+    .Split(" ")
+    .Select(answer => answer.ToCharArray())
+    .Aggregate("abcdefghijklmnopqrstuvwxyz".ToCharArray(), (overlap, answer) => answer.Intersect(overlap).ToArray()))
+    .Select(answer => answer.Length)
+    .Sum();
+
+Console.WriteLine(intersectionSum);
